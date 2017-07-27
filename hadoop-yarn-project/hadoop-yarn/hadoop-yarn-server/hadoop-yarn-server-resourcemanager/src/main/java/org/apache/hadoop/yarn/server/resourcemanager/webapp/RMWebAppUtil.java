@@ -18,7 +18,10 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
+import java.security.Principal;
 import java.util.ArrayList;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -145,5 +148,31 @@ public final class RMWebAppUtil {
         conf.set(authTypeKey, "simple");
       }
     }
+  }
+
+  /**
+   * Helper method to retrieve the UserGroupInformation from the
+   * HttpServletRequest.
+   *
+   * @param hsr the servlet request
+   * @param usePrincipal true if we need to use the principal user, remote
+   *          otherwise.
+   * @return the user group information of the caller.
+   **/
+  public static UserGroupInformation getCallerUserGroupInformation(
+      HttpServletRequest hsr, boolean usePrincipal) {
+
+    String remoteUser = hsr.getRemoteUser();
+    if (usePrincipal) {
+      Principal princ = hsr.getUserPrincipal();
+      remoteUser = princ == null ? null : princ.getName();
+    }
+
+    UserGroupInformation callerUGI = null;
+    if (remoteUser != null) {
+      callerUGI = UserGroupInformation.createRemoteUser(remoteUser);
+    }
+
+    return callerUGI;
   }
 }
